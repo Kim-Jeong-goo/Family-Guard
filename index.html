@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>가족 안심가드</title>
-
+  
   <link rel="apple-touch-icon" href="https://robohash.org/familysafeguard?set=set3&size=180x180">
-  <link rel="icon" href="https://robohash.org/familysafeguard?set=set3&size=180x180"> 
+  <link rel="icon" href="https://robohash.org/familysafeguard?set=set3&size=180x180">
+  
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
   
   <style>
@@ -42,7 +43,13 @@
     .status-card.safe { background-color: #e8f5e9; color: #2e7d32; border-color: #c8e6c9;}
     .status-card.danger { background-color: #ffebee; color: #c62828; border-color: #ffcdd2;}
     .icon { font-size: 1.5em; margin-right: 10px; } h2#status-text { margin: 0; font-size: 1.1em; }
+    
     .input-section p { font-weight: bold; margin-bottom: 10px; color: #333; }
+    
+    /* 💡 마법의 붙여넣기 버튼 디자인 */
+    .paste-btn { width: 100%; padding: 15px; background-color: #ff9800; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3); transition: 0.2s; }
+    .paste-btn:hover, .paste-btn:active { background-color: #f57c00; }
+
     textarea { width: 100%; height: 100px; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-size: 1em; resize: none; box-sizing: border-box; margin-bottom: 15px; }
     .analyze-btn { width: 100%; padding: 15px; background-color: #003366; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
     .result-box { margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-left: 5px solid #003366; border-radius: 4px; line-height: 1.6; }
@@ -72,7 +79,6 @@
     .font-btn { flex: 1; padding: 10px; background: white; border: 1px solid #aaa; border-radius: 5px; cursor: pointer; color: #333; } 
     .font-btn.active { background: #2e7d32; color: white; border-color: #2e7d32; }
     
-    /* 💡 환경설정 - 글자 크기 조절 버튼 직관성 강화 */
     .font-btn.normal { font-size: 15px; font-weight: 500; }
     .font-btn.large { font-size: 18px; font-weight: 700; }
     .font-btn.xlarge { font-size: 21px; font-weight: 900; letter-spacing: -1px; }
@@ -86,7 +92,6 @@
     .confirm-btn { background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; margin-bottom: 10px; font-weight: bold; cursor: pointer; }
     .cancel-btn { background: #757575; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer; }
     
-    /* 초기화 버튼 디자인 */
     .reset-btn { width: 100%; padding: 15px; background-color: #757575; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .reset-btn:hover { background-color: #616161; }
   </style>
@@ -113,6 +118,9 @@
         <div id="status" class="status-card safe"><div class="icon">✅</div><h2 id="status-text">현재 문자 보안: 안전</h2></div>
         <div class="input-section">
           <p>의심되는 문자를 붙여넣으세요</p>
+          
+          <button onclick="pasteFromClipboard()" id="btn-paste" class="paste-btn">📋 복사한 문자 한 번에 붙여넣기</button>
+          
           <textarea id="userInput" placeholder="예: [국제발신] 해외결제 승인완료..."></textarea>
           <button onclick="analyzeText()" class="analyze-btn">🔍 AI 문자 정밀 분석</button>
         </div>
@@ -201,7 +209,10 @@
     /* =========================================
        🧠 JS (동작 로직 영역)
        ========================================= */
+       
+    // 🚨 [주의] 아래 작은따옴표 안에 선생님의 새로운 통신 암호를 반드시 넣어주십시오!
     const API_KEY = 'AIzaSyBaEd2OQkaq444glS8a589Q9r79xYMSiRI';
+    
     let currentSosType = 'sms'; 
 
     window.onload = function() {
@@ -236,6 +247,31 @@
       if (!response.ok) throw new Error("서버 에러");
       const data = await response.json();
       return data.candidates[0].content.parts[0].text;
+    }
+    
+    // 💡 마법의 자동 붙여넣기 기능 (Clipboard API)
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text.trim() === "") {
+          alert("복사된 글자가 없습니다. 스마트폰에서 문자를 먼저 복사해 주세요!");
+          return;
+        }
+        document.getElementById('userInput').value = text;
+        
+        const btn = document.getElementById('btn-paste');
+        const originalText = "📋 복사한 문자 한 번에 붙여넣기";
+        btn.innerText = "✅ 쏙! 붙여넣기 완료!";
+        btn.style.backgroundColor = "#4caf50"; 
+        
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.style.backgroundColor = "#ff9800";
+        }, 2000);
+
+      } catch (err) {
+        alert("⚠️ 스마트폰 보안 설정으로 자동 붙여넣기가 차단되었습니다. 빈칸을 손가락으로 꾹 눌러서 '붙여넣기'를 선택해 주세요.");
+      }
     }
 
     // 💬 문자 검사 및 초기화
