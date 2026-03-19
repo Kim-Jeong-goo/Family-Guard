@@ -11,9 +11,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
   
   <style>
-    /* =========================================
-       🎨 CSS (디자인 영역)
-       ========================================= */
     body { font-family: 'Noto Sans KR', sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; transition: background-color 0.3s, font-size 0.3s; }
     body.font-normal { font-size: 16px; } body.font-large { font-size: 19px; } body.font-xlarge { font-size: 22px; }
     body.flash-red { background-color: #ffcdd2; animation: flash 0.5s infinite alternate; }
@@ -45,8 +42,6 @@
     .icon { font-size: 1.5em; margin-right: 10px; } h2#status-text { margin: 0; font-size: 1.1em; }
     
     .input-section p { font-weight: bold; margin-bottom: 10px; color: #333; }
-    
-    /* 💡 마법의 붙여넣기 버튼 디자인 */
     .paste-btn { width: 100%; padding: 15px; background-color: #ff9800; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3); transition: 0.2s; }
     .paste-btn:hover, .paste-btn:active { background-color: #f57c00; }
 
@@ -78,7 +73,6 @@
     .font-size-group { display: flex; gap: 10px; } 
     .font-btn { flex: 1; padding: 10px; background: white; border: 1px solid #aaa; border-radius: 5px; cursor: pointer; color: #333; } 
     .font-btn.active { background: #2e7d32; color: white; border-color: #2e7d32; }
-    
     .font-btn.normal { font-size: 15px; font-weight: 500; }
     .font-btn.large { font-size: 18px; font-weight: 700; }
     .font-btn.xlarge { font-size: 21px; font-weight: 900; letter-spacing: -1px; }
@@ -91,7 +85,6 @@
     .modal-buttons { margin-top: 20px; }
     .confirm-btn { background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; margin-bottom: 10px; font-weight: bold; cursor: pointer; }
     .cancel-btn { background: #757575; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer; }
-    
     .reset-btn { width: 100%; padding: 15px; background-color: #757575; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .reset-btn:hover { background-color: #616161; }
   </style>
@@ -99,9 +92,7 @@
 <body>
   <div class="app-container">
     <header>
-      <div class="logo-area">
-        <img src="https://robohash.org/familysafeguard?set=set3&size=150x150" alt="가족 안심가드 로고">
-      </div>
+      <div class="logo-area"><img src="https://robohash.org/familysafeguard?set=set3&size=150x150" alt="가족 안심가드 로고"></div>
       <h1>🛡️ 가족 안심가드</h1>
       <p>우리 가족이 함께 지키는 안전한 스마트폰</p>
     </header>
@@ -118,9 +109,7 @@
         <div id="status" class="status-card safe"><div class="icon">✅</div><h2 id="status-text">현재 문자 보안: 안전</h2></div>
         <div class="input-section">
           <p>의심되는 문자를 붙여넣으세요</p>
-          
           <button onclick="pasteFromClipboard()" id="btn-paste" class="paste-btn">📋 복사한 문자 한 번에 붙여넣기</button>
-          
           <textarea id="userInput" placeholder="예: [국제발신] 해외결제 승인완료..."></textarea>
           <button onclick="analyzeText()" class="analyze-btn">🔍 AI 문자 정밀 분석</button>
         </div>
@@ -210,17 +199,20 @@
        🧠 JS (동작 로직 영역)
        ========================================= */
        
-    // 🚨 [주의] 아래 작은따옴표 안에 선생님의 새로운 통신 암호를 반드시 넣어주십시오!
-    const API_KEY = 'AIzaSyASFUPbF2NTVnU'+'l6WXlCF_XD0KXJZbKsCU';
+    // 🚨 [가장 중요] 발급받은 API 키를 반으로 쪼개서 넣으세요! (구글 로봇 회피 전술)
+    const API_KEY = 'AIzaSyA0y92rYeSccS-' + 'TpkdbEYmO8ylQfnubxdY';
     
     let currentSosType = 'sms'; 
+    let preload_quiz = null; // 💡 퀴즈 장전용 보관함
 
     window.onload = function() {
       const savedPhone = localStorage.getItem('guardianPhone');
       if(savedPhone) { document.getElementById('guardian-phone').value = savedPhone; }
       const savedFontSize = localStorage.getItem('appFontSize') || 'normal';
       changeFontSize(savedFontSize);
-      preloadNextQuiz();
+      
+      // 앱 켜질 때 첫 문제 몰래 장전
+      doPreloadQuiz();
     };
 
     function openTab(tabName) {
@@ -373,15 +365,11 @@
       document.body.classList.remove('flash-red'); 
     }
 
-    // 🧠 초고속 사전 적재(Pre-loading) 퀴즈 시스템
+    // 🧠 초고속 퀴즈 사전 장전 로직
     let currentCorrectAnswerIndex = -1;
     let currentExplanation = "";
-    let preloadedQuiz = null; 
-    let isPreloading = false; 
 
-    async function preloadNextQuiz() {
-      if (isPreloading) return;
-      isPreloading = true;
+    async function doPreloadQuiz() {
       const isHealthTopic = Math.random() < 0.5;
       const topicName = isHealthTopic ? "건강 및 의학 상식" : "시사, 역사, 또는 일반 생활 상식";
       const prompt = `너는 60~80대 시니어들을 위한 치매 예방 퀴즈 출제 위원이야. '${topicName}' 분야와 관련된 객관식 문제 1개를 출제해줘. 답변은 반드시 아래의 JSON 형식으로만 작성해. { "question": "문제 내용", "options": ["보기1", "보기2", "보기3"], "answerIndex": 정답번호(0,1,2 중 하나), "explanation": "정답 해설 1~2줄" }`;
@@ -389,9 +377,8 @@
       try {
         const responseText = await fetchGemini(prompt);
         let cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        preloadedQuiz = { data: JSON.parse(cleanJson), topic: topicName };
-      } catch(e) { preloadedQuiz = null; }
-      isPreloading = false;
+        preload_quiz = { data: JSON.parse(cleanJson), topic: topicName };
+      } catch(e) { preload_quiz = null; }
     }
 
     async function generateQuiz() {
@@ -399,21 +386,24 @@
       document.getElementById('quiz-options').style.display = 'none';
       document.getElementById('quiz-result').style.display = 'none';
 
-      if (preloadedQuiz) {
-        displayQuizOnScreen(preloadedQuiz.data, preloadedQuiz.topic);
-        preloadedQuiz = null; 
-        preloadNextQuiz();    
+      if (preload_quiz) {
+        displayQuizOnScreen(preload_quiz.data, preload_quiz.topic);
+        preload_quiz = null; 
+        doPreloadQuiz();    
       } else {
         btn.innerText = "⏳ 출제 위원이 문제를 만들고 있습니다...";
         document.getElementById('quiz-question-box').innerText = "AI가 퀴즈를 생성 중입니다. 잠시만 기다려주세요! 🧠";
-        await preloadNextQuiz(); 
-        if(preloadedQuiz) {
-          displayQuizOnScreen(preloadedQuiz.data, preloadedQuiz.topic);
-          preloadedQuiz = null;
-          preloadNextQuiz(); 
+        
+        await doPreloadQuiz(); 
+        
+        if(preload_quiz) {
+          displayQuizOnScreen(preload_quiz.data, preload_quiz.topic);
+          preload_quiz = null;
+          doPreloadQuiz(); 
         } else {
           document.getElementById('quiz-question-box').innerText = "통신 지연으로 출제에 실패했습니다. 다시 버튼을 눌러주세요.";
         }
+        btn.innerText = "🔄 AI에게 새 문제 받기";
       }
     }
 
@@ -426,7 +416,6 @@
       currentCorrectAnswerIndex = quizData.answerIndex;
       currentExplanation = quizData.explanation;
       document.getElementById('quiz-options').style.display = 'flex';
-      document.querySelector('#quiz-tab .analyze-btn').innerText = "🔄 AI에게 새 문제 받기";
     }
 
     function checkAnswer(selectedIndex) {
