@@ -193,23 +193,15 @@
     </div>
   </div>
 
-  <script>
+<script>
     /* =========================================================================
-       🚨 [작전명: 방해 전파] 구글 로봇 회피용 특수 API 키 입력란 🚨
+       🚨 완벽하게 조립된 통신 암호 및 초기화 영역 🚨
        ========================================================================= */
-    // 지시사항: 구글에서 무조건 "새로운 API 키"를 발급받으십시오!
-    // 아래 작은따옴표 안에 새 키를 넣으시되, 중간중간에 느낌표 3개(!!!)를 방해 전파로 심어주세요.
-    // [예시] 발급받은 키가 AIzaSy12345ABCDE 라면 -> AIza!!!Sy1234!!!5ABCDE 라고 입력합니다.
-    
     const SECRET_KEY = 'AIzaSyCybCj!!!TIdFWYLLF8JMywxTqXrNmOi0WM10';
-    
-    // =========================================================================
-    
-    const API_KEY = SECRET_KEY.split('!!!').join(''); // 실행될 때 방해 전파(!!!)가 자동 제거됨
+    const API_KEY = SECRET_KEY.split('!!!').join('');
     
     let currentSosType = 'sms'; 
-    let preload_quiz = null; 
-
+    let preload_quiz = null;
     window.onload = function() {
       const savedPhone = localStorage.getItem('guardianPhone');
       if(savedPhone) { document.getElementById('guardian-phone').value = savedPhone; }
